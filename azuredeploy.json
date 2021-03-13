@@ -23,6 +23,8 @@
     "asename": "[concat(parameters('EngineerAlias'), '-A1-ASE')]",
     "appServicePlanName": "[concat(parameters('EngineerAlias'),'-A1-ASP')]",
     "webAppName": "[concat(parameters('EngineerAlias'),'-A1-APP')]",
+    "webApp-prod-URL": "https://github.com/amymcel/AppService.Specialist.Config.Ase.1.App.git",
+    "webApp-branch": "main",
 
     "firewall": "[concat(parameters('EngineerAlias'), '-A1-firewall')]",
     "firewallIP": "[concat(parameters('EngineerAlias'), '-A1-fwip')]",
@@ -193,7 +195,22 @@
       ],
       "properties": {
         "serverFarmId": "[resourceId('Microsoft.Web/serverFarms', variables('appServicePlanName'))]"
-      }
+      },
+      "resources": [
+        {
+          "name": "web",
+          "type": "sourcecontrols",
+          "apiVersion": "2018-11-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/Sites', variables('webAppName'))]"
+          ],
+          "properties": {
+            "RepoUrl": "[variables('webApp-prod-URL')]",
+            "branch": "[variables('webApp-branch')]",
+            "IsManualIntegration": true
+          }
+        }
+      ]
     },
     // firewall --------------------------------------------------------------
     {
@@ -215,7 +232,8 @@
       "apiVersion": "2019-12-01",
       "location": "[resourceGroup().location]",
       "dependsOn": [
-        "[resourceId('Microsoft.Network/publicIPAddresses', variables('firewallIP'))]"
+        "[resourceId('Microsoft.Network/publicIPAddresses', variables('firewallIP'))]",
+        "[resourceId('Microsoft.Network/virtualNetworks', variables('vnetName'))]"
       ],
       "properties": {
         "ipConfigurations": [
@@ -254,13 +272,6 @@
                   "destinationAddresses": [ "*" ],
                   "destinationPorts": [ "12000" ]
                 },
-                //{
-                //  "name": "Http",
-                //  "protocols": [ "TCP" ],
-                //  "sourceAddresses": [ "*" ],
-                //  "destinationAddresses": [ "*" ],
-                //  "destinationPorts": [ "80" ]
-                //},
                 {
                   "name": "Https",
                   "protocols": [ "TCP" ],
@@ -286,11 +297,6 @@
                   "sourceAddresses": [ "[variables('vnetAddressPrefix')]" ],
                   "fqdnTags": [ "AppServiceEnvironment" ]
                 }
-                //{
-                //  "name": "Win",
-                //  "sourceAddresses": [ "[variables('vnetAddressPrefix')]" ],
-                //  "fqdnTags": [ "WindowsUpdate" ]
-                //}
               ]
             }
           }
@@ -318,19 +324,6 @@
               "direction": "Inbound"
             }
           },
-          //{
-          //  "name": "Inbound-HTTP",
-          //  "properties": {
-          //    "protocol": "*",
-          //    "sourcePortRange": "*",
-          //    "destinationPortRange": "80",
-          //    "sourceAddressPrefix": "*",
-          //    "destinationAddressPrefix": "*",
-          //    "access": "Allow",
-          //    "priority": 120,
-          //    "direction": "Inbound"
-          //  }
-          //},
           {
             "name": "Inbound-HTTPS",
             "properties": {
@@ -447,60 +440,7 @@
         ]
       },
       "resources": [
-        {
-          "name": "[concat(variables('routetable'), '/Firewall')]",
-          "type": "Microsoft.Network/routeTables/routes",
-          "apiVersion": "2020-07-01",
-          "dependsOn": [
-            "[resourceId('Microsoft.Network/publicIPAddresses', variables('firewallIP'))]",
-            "[resourceId('Microsoft.Network/routeTables', variables('routetable'))]"
-          ],
-          "properties": {
-            "addressPrefix": "[concat(variables('subnetAddressPrefix2'))]",
-            "nextHopType": "VirtualAppliance",
-            "nextHopIpAddress": "[reference(resourceId('Microsoft.Network/publicIPAddresses', variables('firewallIP'))).IpAddress]"
-          }
-        }
-      ]
-    },
-    //updating ASE subnet --------------------------------------------------------------
-    {
-      "name": "updateSubnet",
-      "type": "Microsoft.Resources/deployments",
-      "apiVersion": "2020-06-01",
-      "resourceGroup": "[resourceGroup().name]",
-      "dependsOn": [
-        "[resourceId('Microsoft.Web/hostingEnvironments', variables('aseName'))]",
-        "[resourceId('Microsoft.Network/networkSecurityGroups', variables('NetworkSecurityGroup'))]",
-        "[resourceId('Microsoft.Network/routeTables', variables('routetable'))]"
-      ],
-      "properties": {
-        "mode": "Incremental",
-        "template": {
-          "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-          "contentVersion": "1.0.0.0",
-          "resources": [
-            {
-              "name": "[concat(variables('vnetName'), '/', variables('subnetName2'))]",
-              "type": "Microsoft.Network/virtualNetworks/subnets",
-              "apiVersion": "2020-08-01",
-              "location": "[resourceGroup().location]",
-              //"dependsOn": [
-              //  "[resourceId('Microsoft.Web/hostingEnvironments', variables('aseName'))]"
-              //],
-              "properties": {
-                "addressPrefix": "[variables('subnetAddressPrefix2')]",
-                "networkSecurityGroups": {
-                  "id": "[resourceId('Microsoft.Network/networkSecurityGroups', variables('NetworkSecurityGroup'))]"
-                },
-                "routeTable": {
-                  "id": "[resourceId('Microsoft.Network/routeTables', variables('routetable'))]"
-                }
-              }
-            }
-          ]
-        }
-      }
+       ]
     }
   ]
 }
