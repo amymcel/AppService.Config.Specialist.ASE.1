@@ -7,6 +7,6 @@ ARM Template for deploying lab for AppService Config Specialist Certification - 
 ## This arm deployment will:
 
 1.	App Service Environment (ILB ASE)
-2.	Virtual Network with NSG and UDR
+2.	Virtual Network, NSG and UDR
 3.	Azure Firewall
 
