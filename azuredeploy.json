@@ -23,7 +23,7 @@
     "asename": "[concat(parameters('EngineerAlias'), '-A1-ASE')]",
     "appServicePlanName": "[concat(parameters('EngineerAlias'),'-A1-ASP')]",
     "webAppName": "[concat(parameters('EngineerAlias'),'-A1-APP')]",
-    "webApp-prod-URL": "https://github.com/amymcel/AppService.Specialist.Config.Ase.1.App.git",
+    "webApp-prod-URL": "https://github.com/amymcel/AppService.Config.Specialist.Ase.1.App.git",
     "webApp-branch": "main",
 
     "firewall": "[concat(parameters('EngineerAlias'), '-A1-firewall')]",
